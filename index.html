@@ -23,85 +23,96 @@
       max-width: 340px;
       width: 90%;
     }
-    .logo {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-    }
-    h1 {
-      font-size: 1.3rem;
-      color: #333;
-      margin: 0 0 0.5rem;
-    }
-    p {
-      color: #666;
-      font-size: 0.95rem;
-      margin: 0 0 1.5rem;
-    }
+    .logo { font-size: 3rem; margin-bottom: 0.5rem; }
+    h1 { font-size: 1.3rem; color: #333; margin: 0 0 0.5rem; }
+    p { color: #666; font-size: 0.95rem; margin: 0 0 1rem; }
     .btn {
-      display: inline-block;
-      background: #e8401c;
-      color: white;
+      display: block;
       text-decoration: none;
       padding: 0.75rem 1.5rem;
       border-radius: 8px;
       font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
       width: 100%;
       box-sizing: border-box;
+      cursor: pointer;
+      border: none;
     }
-    .btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-    }
-    .status {
-      font-size: 0.8rem;
-      color: #999;
-      margin-top: 1rem;
-    }
+    .btn-primary { background: #e8401c; color: white; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .btn-store { background: #4CAF50; color: white; }
+    .status { font-size: 0.8rem; color: #999; margin-top: 0.5rem; }
+    .divider { border: none; border-top: 1px solid #eee; margin: 0.8rem 0; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo">🍽️</div>
     <h1>Chefslist</h1>
-    <p>Die App wird geöffnet…</p>
+    <p>Wähle, wie du Chefslist öffnen möchtest:</p>
 
-    <a class="btn" id="appLink"
+    <!-- Methode 1: Intent-Link (funktioniert in Chrome) -->
+    <a class="btn btn-primary" id="btnIntent"
        href="intent://restaurant.chefslist.de/login#Intent;scheme=https;package=de.adornis.chefslist.app;S.browser_fallback_url=https%3A%2F%2Frestaurant.chefslist.de%2Flogin;end">
-      App öffnen
+      📱 App öffnen (Methode 1)
     </a>
 
+    <!-- Methode 2: Market-Link direkt zur App -->
+    <a class="btn btn-primary" id="btnMarket"
+       href="market://launch?id=de.adornis.chefslist.app">
+      📱 App öffnen (Methode 2)
+    </a>
+
+    <hr class="divider">
+
+    <!-- Fallback: Web-App im Browser -->
     <a class="btn btn-secondary"
-       href="https://restaurant.chefslist.de/login">
-      Im Browser öffnen
+       href="https://restaurant.chefslist.de/login"
+       target="_blank">
+      🌐 Im Browser öffnen
     </a>
 
-    <p class="status" id="status">Automatische Weiterleitung läuft…</p>
+    <!-- Play Store als letzter Ausweg -->
+    <a class="btn btn-store"
+       href="https://play.google.com/store/apps/details?id=de.adornis.chefslist.app">
+      ▶ Im Play Store öffnen
+    </a>
+
+    <p class="status" id="status">Tippe auf einen Button oben.</p>
   </div>
 
   <script>
-    // Automatisch nach kurzem Delay den App-Link auslösen (benötigt User-Gesture-Kontext)
+    // Automatisch nach kurzem Delay den besten Ansatz versuchen
     window.addEventListener('load', function () {
-      var isAndroid = /Android/i.test(navigator.userAgent);
+      var ua = navigator.userAgent;
+      var isAndroid = /Android/i.test(ua);
+      var isWebView = /wv\b/.test(ua) || /; wv\)/.test(ua);
+
       if (isAndroid) {
-        // Kurze Verzögerung, dann automatisch versuchen die App zu öffnen
-        setTimeout(function () {
-          var intentUrl = "intent://restaurant.chefslist.de/login#Intent;scheme=https;package=de.adornis.chefslist.app;S.browser_fallback_url=https%3A%2F%2Frestaurant.chefslist.de%2Flogin;end";
-          window.location.href = intentUrl;
-          // Falls die App nicht installiert ist, bleibt der Browser auf dieser Seite
+        if (isWebView) {
+          // In WebView: intent:// funktioniert oft nicht, market:// manchmal schon
+          document.getElementById('status').textContent =
+            'WebView erkannt – bitte "Methode 2" oder Browser versuchen.';
+          // Methode 2 (market://) automatisch versuchen
           setTimeout(function () {
-            document.getElementById('status').textContent =
-              'App nicht gefunden? Nutze den Button oben.';
-          }, 2500);
-        }, 800);
+            window.location.href = "market://launch?id=de.adornis.chefslist.app";
+          }, 600);
+        } else {
+          // Echter Chrome-Browser: intent:// verwenden
+          document.getElementById('status').textContent =
+            'Android erkannt – App wird gestartet…';
+          setTimeout(function () {
+            window.location.href = "intent://restaurant.chefslist.de/login#Intent;scheme=https;package=de.adornis.chefslist.app;S.browser_fallback_url=https%3A%2F%2Frestaurant.chefslist.de%2Flogin;end";
+          }, 600);
+        }
       } else {
-        // Kein Android: direkt zur Web-App weiterleiten
+        // Kein Android: direkt zur Web-App
         document.getElementById('status').textContent =
           'Kein Android erkannt – Browser-Version wird geöffnet.';
         setTimeout(function () {
           window.location.href = "https://restaurant.chefslist.de/login";
-        }, 1500);
+        }, 1200);
       }
     });
   </script>
